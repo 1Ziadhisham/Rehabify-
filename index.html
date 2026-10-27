@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="مساعد إسعافات أولية للإصابات الرياضية">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>REHABIFY</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: a 3D patient you spin on one side, a first-aid consultation chat on the other; stacks on phones */
+:root{
+  --bg:#EEF3F6; --surface:#FFFFFF; --surface-2:#F6F9FB; --line:#D8E2E9;
+  --ink:#0E2230; --muted:#5A6D7B;
+  --tape:#0A7FC2; --tape-soft:#E1F0FA;
+  --model:#C3D0DA; --stage:#E3EBF1;
+  --hot:#E5484D; --amber:#C98407; --ok:#2B8F62;
+  --hot-soft:#FDECEC; --amber-soft:#FBF2DF; --ok-soft:#E3F3EB;
+  --display:"Alexandria","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --text:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --r:16px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A141B; --surface:#111E27; --surface-2:#0D1921; --line:#22343F;
+  --ink:#E5EEF4; --muted:#8FA3B1; --tape:#3BA7E6; --tape-soft:#12303F;
+  --model:#7790A2; --stage:#0E1C25;
+  --hot:#FF6B6F; --amber:#E9AE3C; --ok:#4CC08B;
+  --hot-soft:#3A1A1C; --amber-soft:#33280F; --ok-soft:#12301F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A141B; --surface:#111E27; --surface-2:#0D1921; --line:#22343F;
+  --ink:#E5EEF4; --muted:#8FA3B1; --tape:#3BA7E6; --tape-soft:#12303F;
+  --model:#7790A2; --stage:#0E1C25;
+  --hot:#FF6B6F; --amber:#E9AE3C; --ok:#4CC08B;
+  --hot-soft:#3A1A1C; --amber-soft:#33280F; --ok-soft:#12301F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:15px;line-height:1.65;margin:0}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 32px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.3}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--tape);outline-offset:2px;border-radius:8px}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:.06em}
+.brand i{width:26px;height:26px;border-radius:8px;background:var(--tape);display:grid;place-items:center;transform:rotate(-8deg)}
+.brand i::before{content:"";width:15px;height:5px;border-radius:3px;background:var(--surface)}
+.brand small{display:block;font-family:var(--text);font-weight:500;letter-spacing:0;font-size:11px;color:var(--muted);line-height:1.2}
+nav{display:flex;gap:4px;margin-inline-start:auto;overflow-x:auto;max-width:100%}
+nav a{padding:6px 13px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;white-space:nowrap;font-size:14px;transition:background .2s,color .2s}
+nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+.view{padding-top:18px}
+
+/* consult layout */
+.consult{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:18px;align-items:start}
+@media (max-width:900px){.consult{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;background:radial-gradient(120% 80% at 50% 30%,var(--surface) 0%,var(--stage) 75%);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;height:min(640px,calc(100vh - 120px));min-height:420px}
+@media (max-width:900px){.stage{height:430px;min-height:0}}
+#gl{position:absolute;inset:0;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+.stage-ui{position:absolute;inset:12px 12px auto 12px;display:flex;justify-content:space-between;align-items:start;gap:8px;pointer-events:none;flex-wrap:wrap}
+.stage-ui>*{pointer-events:auto}
+.seg{display:inline-flex;background:color-mix(in srgb,var(--surface) 85%,transparent);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;padding:5px 11px;border-radius:999px;font-weight:600;font-size:12px;color:var(--muted);transition:all .25s}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.picked{background:var(--hot);color:#fff;font-weight:600;font-size:13px;padding:6px 12px;border-radius:999px;box-shadow:0 6px 18px color-mix(in srgb,var(--hot) 35%,transparent);animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(-6px)}}
+.stage-hint{position:absolute;bottom:12px;inset-inline:12px;text-align:center;font-size:12px;color:var(--muted);pointer-events:none}
+.stage-hint b{color:var(--ink)}
+.glfail{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted)}
+.zonebar{display:flex;gap:6px;overflow-x:auto;padding:10px 2px 2px;scrollbar-width:thin}
+.chip{border:1px solid var(--line);background:var(--surface);padding:6px 12px;border-radius:999px;font-size:13px;white-space:nowrap;transition:all .2s}
+.chip:hover{border-color:var(--tape)}
+.chip[aria-pressed="true"]{background:var(--tape);border-color:var(--tape);color:#fff}
+
+/* chat */
+.chat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;height:min(640px,calc(100vh - 120px));min-height:520px;min-width:0;overflow:hidden}
+@media (max-width:900px){.chat{height:auto;min-height:0}}
+.chead{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.avatar{width:36px;height:36px;border-radius:12px;background:var(--tape);display:grid;place-items:center;flex:none}
+.avatar::before{content:"";width:18px;height:6px;border-radius:3px;background:#fff;box-shadow:0 0 0 0 #fff;transform:rotate(-8deg)}
+.chead h2{font-size:15px}
+.chead small{display:block;font-size:12px;color:var(--muted)}
+.lvl{margin-inline-start:auto;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.lvl.red{background:var(--hot-soft);color:var(--hot)} .lvl.amber{background:var(--amber-soft);color:var(--amber)} .lvl.green{background:var(--ok-soft);color:var(--ok)}
+.sos{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--hot-soft);font-size:13px;flex-wrap:wrap}
+.sos b{font-family:var(--display);color:var(--hot);font-size:16px;user-select:all;direction:ltr}
+.sos button{margin-inline-start:auto;border:0;background:var(--hot);color:#fff;font-weight:600;padding:6px 12px;border-radius:999px;font-size:13px}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+@media (max-width:900px){.msgs{max-height:60vh;min-height:260px}}
+.m{max-width:88%;padding:10px 13px;border-radius:16px;font-size:14.5px;animation:in .3s ease;overflow-wrap:anywhere}
+.m.bot{background:var(--surface-2);border:1px solid var(--line);border-start-start-radius:4px;align-self:flex-start}
+.m.me{background:var(--tape);color:#fff;border-start-end-radius:4px;align-self:flex-end}
+.m.sys{align-self:center;background:transparent;color:var(--muted);font-size:12px;padding:2px}
+.m p{margin:0 0 6px} .m p:last-child{margin:0}
+.m ol,.m ul{margin:4px 0 6px;padding-inline-start:20px}
+.m li{margin:2px 0}
+.m strong{font-weight:600}
+.typing{display:inline-flex;gap:4px;padding:4px 2px}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:dot 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,60%,100%{opacity:.25;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.quick{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px}
+.quick .chip{font-size:13px;white-space:normal;text-align:start}
+.compose{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);align-items:end}
+.compose textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:9px 12px;max-height:120px;min-height:42px}
+.send{border:0;width:42px;height:42px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;flex:none;transition:transform .15s,opacity .2s}
+.send:disabled{opacity:.35;cursor:not-allowed}
+.send svg{width:18px;height:18px;transform:scaleX(-1)}
+.note{font-size:11.5px;color:var(--muted);padding:0 14px 10px}
+
+/* library */
+.intro{margin-bottom:16px}
+.intro h1{font-size:clamp(22px,3.4vw,30px);font-weight:800}
+.intro p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.search{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 16px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;text-align:start;display:grid;gap:6px;align-content:start;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-2px);border-color:var(--tape)}
+.card h3{font-size:16px}
+.card .en{font-size:12px;color:var(--muted);direction:ltr;text-align:end}
+.card p{margin:0;font-size:13px;color:var(--muted)}
+.pill{font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--tape-soft);color:var(--tape);justify-self:start}
+.empty{color:var(--muted);text-align:center;padding:30px}
+dialog{border:0;border-radius:18px;padding:0;max-width:640px;width:calc(100% - 32px);background:var(--surface);color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(5,15,22,.55);backdrop-filter:blur(3px)}
+dialog[open]{animation:in .3s ease}
+.dhead{padding:18px 20px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:start}
+.dhead h2{font-size:21px}
+.x{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;font-size:18px;flex:none}
+.dbody{padding:16px 20px 22px;display:grid;gap:16px;max-height:70vh;overflow:auto}
+.dbody h3{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.dbody ul{margin:0;padding-inline-start:20px}
+.ph{display:grid;grid-template-columns:26px 1fr;gap:10px}
+.ph .n{width:26px;height:26px;border-radius:50%;background:var(--tape);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px}
+.ph p{margin:1px 0 10px;font-size:14px}
+.rtp{background:var(--tape-soft);border-radius:10px;padding:10px 14px;font-weight:600}
+.flags{background:var(--hot-soft);border-radius:10px;padding:12px 14px}
+.flags h3{color:var(--hot)}
+.btn{border:0;background:var(--ink);color:var(--bg);padding:9px 18px;border-radius:999px;font-weight:600}
+
+/* tracker */
+.tgrid{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.tgrid{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:14px;min-width:0}
+.field{display:grid;gap:6px}
+.label{font-size:12px;font-weight:600;color:var(--muted)}
+.field select,.field textarea,.field input[type=date]{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 12px}
+.range{display:flex;align-items:center;gap:12px}
+.range input{flex:1;accent-color:var(--tape)}
+.pain{min-width:44px;text-align:center;font-family:var(--display);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
+.chartbox{overflow-x:auto}
+.chartbox svg{width:100%;min-width:300px;height:auto;display:block}
+.log{display:grid;gap:8px;max-height:340px;overflow:auto}
+.entry{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:10px 12px;background:var(--surface-2);border-radius:10px}
+.entry small{color:var(--muted);display:block}
+.del{border:0;background:transparent;color:var(--muted);font-size:13px}
+footer{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;transition:all .3s;z-index:20;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap bar">
+    <div class="brand"><i></i><span>REHABIFY<small>مساعد الإصابات الرياضية</small></span></div>
+    <nav aria-label="الأقسام">
+      <a href="#assistant">الاستشارة</a>
+      <a href="#library">مكتبة الإصابات</a>
+      <a href="#tracker">متابعة التعافي</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-assistant">
+    <div class="consult">
+      <div>
+        <div class="stage" id="stage">
+          <canvas id="gl" aria-label="مجسم إنسان ثلاثي الأبعاد. اسحب للف واضغط على مكان الألم"></canvas>
+          <div class="stage-ui">
+            <div class="seg" role="group" aria-label="زاوية الرؤية">
+              <button data-cam="front" aria-pressed="true">أمام</button>
+              <button data-cam="right" aria-pressed="false">يمين</button>
+              <button data-cam="back" aria-pressed="false">خلف</button>
+              <button data-cam="left" aria-pressed="false">شمال</button>
+            </div>
+            <span class="picked" id="picked" hidden></span>
+          </div>
+          <div class="stage-hint" id="hint"><b>اسحب</b> عشان تلف الجسم 360° · <b>اضغط</b> على مكان الألم</div>
+        </div>
+        <div class="zonebar" id="zonebar" aria-label="أو اختار المكان من القايمة"></div>
+      </div>
+
+      <div class="chat">
+        <div class="chead">
+          <span class="avatar" aria-hidden="true"></span>
+          <div><h2>استشارة سريعة</h2><small id="mode">مساعد إسعافات أولية</small></div>
+          <span class="lvl" id="lvl">لسه بنقيّم</span>
+        </div>
+        <div class="sos">
+          <span>طوارئ؟ اتصل بالإسعاف</span><b>123</b>
+          <button id="sosBtn">حالة طارئة دلوقتي</button>
+        </div>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <div class="quick" id="quick"></div>
+        <form class="compose" id="compose">
+          <textarea id="input" rows="1" placeholder="احكي إيه اللي حصل…" aria-label="رسالتك"></textarea>
+          <button class="send" id="send" aria-label="إرسال"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+        </form>
+        <div class="note">إرشادات إسعاف أولي، مش تشخيص. لو حد في خطر اتصل بالإسعاف الأول.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-library" hidden>
+    <div class="intro"><h1>مكتبة الإصابات</h1><p>الأعراض، الإسعاف الأول، مراحل التأهيل، ومتوسط وقت الرجوع للتمرين.</p></div>
+    <input class="search" id="q" type="search" placeholder="دوّر باسم الإصابة أو المكان… مثال: رباط، ركبة، ACL">
+    <div class="chips" id="regionChips"></div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="view" id="v-tracker" hidden>
+    <div class="intro"><h1>متابعة التعافي</h1><p>سجّل درجة الألم كل يوم وشوف بتتحسن إزاي. البيانات بتتحفظ على جهازك بس.</p></div>
+    <div class="tgrid">
+      <form class="box" id="tform">
+        <div class="field"><label for="tInj" class="label">الإصابة</label><select id="tInj"></select></div>
+        <div class="field"><label for="tDate" class="label">التاريخ</label><input type="date" id="tDate"></div>
+        <div class="field"><label for="tPain" class="label">درجة الألم</label><div class="range"><input type="range" id="tPain" min="0" max="10" value="4"><span class="pain" id="tPainV">4</span></div></div>
+        <div class="field"><label for="tNote" class="label">ملاحظة (اختياري)</label><textarea id="tNote" rows="2" placeholder="مثال: عملت تمارين المرحلة الأولى بدون ألم"></textarea></div>
+        <button class="btn" type="submit">سجّل اليوم</button>
+      </form>
+      <div class="box"><div class="label" id="chartTitle">منحنى الألم</div><div class="chartbox" id="chart"></div><div class="log" id="log"></div></div>
+    </div>
+  </section>
+
+  <footer>المعلومات هنا للتوعية والإسعاف الأولي فقط ومش بديل عن الكشف عند طبيب أو أخصائي علاج طبيعي. في الطوارئ في مصر: إسعاف 123.</footer>
+</main>
+
+<dialog id="dlg"><div class="dhead"><div><h2 id="dT"></h2><div class="label" id="dE" dir="ltr" style="text-align:end"></div></div><button class="x" id="dX" aria-label="إغلاق">×</button></div><div class="dbody" id="dB"></div></dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ===================== DATA ===================== */
+const MECH={twist:"لفّ أو دوران مفاجئ",impact:"خبطة أو التحام",fall:"وقعة",sprint:"جري سريع أو انطلاق",jump:"قفز أو نزول",lift:"شيل أو دفع تقيل",overuse:"تدريجي من كثرة الاستخدام"};
+const ZONES=[
+ {id:"head",n:"الرأس",reg:"الرأس والرقبة"},{id:"neck",n:"الرقبة",reg:"الرأس والرقبة"},
+ {id:"shoulder",n:"الكتف",reg:"الطرف العلوي",bi:1},{id:"elbow",n:"الكوع",reg:"الطرف العلوي",bi:1},{id:"wrist",n:"الرسغ",reg:"الطرف العلوي",bi:1},{id:"hand",n:"اليد والصوابع",reg:"الطرف العلوي",bi:1},
+ {id:"chest",n:"الصدر والضلوع",reg:"الجذع"},{id:"upperback",n:"أعلى الظهر",reg:"الجذع",bi:1},{id:"abdomen",n:"البطن",reg:"الجذع"},{id:"lowback",n:"أسفل الظهر",reg:"الجذع"},
+ {id:"groin",n:"الضامة والحوض",reg:"الحوض والفخذ",bi:1},{id:"glute",n:"الأرداف",reg:"الحوض والفخذ",bi:1},{id:"thigh",n:"الفخذ الأمامي",reg:"الحوض والفخذ",bi:1},{id:"hamstring",n:"العضلة الخلفية",reg:"الحوض والفخذ",bi:1},
+ {id:"knee",n:"الركبة",reg:"الركبة والساق",bi:1},{id:"shin",n:"قصبة الرجل",reg:"الركبة والساق",bi:1},{id:"calf",n:"السمانة",reg:"الركبة والساق",bi:1},
+ {id:"ankle",n:"الكاحل",reg:"القدم والكاحل",bi:1},{id:"achilles",n:"وتر أكيلس",reg:"القدم والكاحل",bi:1},{id:"foot",n:"مشط القدم",reg:"القدم والكاحل",bi:1},{id:"heel",n:"الكعب وباطن القدم",reg:"القدم والكاحل",bi:1},
+];
+const INJ=[
+ {id:"concussion",z:"head",n:"ارتجاج المخ",e:"Concussion",m:["impact","fall"],s:["صداع أو ضغط في الرأس","دوخة أو زغللة","لخبطة أو بطء في التفكير","حساسية من الضوء والصوت"],f:["وقف اللعب فوراً ومتكملش نفس اليوم","متكونش لوحدك أول 24 ساعة","راحة جسدية وذهنية خفيفة أول يوم أو يومين"],p:[["راحة نسبية","نشاط يومي خفيف بدون ما الأعراض تزيد"],["رجوع تدريجي","مشي ثم عجلة ثابتة ثم تمارين بدون التحام"],["رجوع كامل","تمرين التحام بعد موافقة الطبيب"]],t:"بروتوكول تدريجي بعد زوال الأعراض، غالباً مش أقل من أسبوع إلى أسبوعين للكبار",r:["فقدان وعي","ترجيع متكرر","صداع بيزيد","تشنجات","ضعف أو تنميل في الأطراف"]},
+ {id:"neckstrain",z:"neck",n:"شد عضلات الرقبة",e:"Neck strain / Whiplash",m:["impact","twist","fall"],s:["ألم وتيبس في الرقبة","صعوبة في لف الرأس"],f:["حركة خفيفة في حدود عدم الألم","كمادات دافية بعد أول 48 ساعة"],p:[["استعادة الحركة","تمارين مدى حركي خفيفة"],["تقوية","عضلات الرقبة العميقة وأعلى الظهر"],["رجوع","تمارين خاصة بالرياضة"]],t:"من أسبوع لـ 6 أسابيع",r:["تنميل أو ضعف في الذراعين","ألم شديد بعد خبطة قوية على الرأس أو الرقبة"]},
+ {id:"stinger",z:"neck",n:"إصابة العصب (Stinger)",e:"Burner / Stinger",m:["impact"],s:["لسعة كهربا نازلة في دراع واحد","تنميل أو ضعف مؤقت"],f:["وقف اللعب","لو الأعراض مكملة أكتر من دقايق أو في الدراعين: طوارئ"],p:[["مراقبة","لازم الأعراض تختفي تماماً"],["تقوية","رقبة وكتف"],["رجوع","بعد قوة كاملة"]],t:"دقايق لأيام لو اختفت الأعراض بالكامل",r:["أعراض في الدراعين الاتنين","ضعف بيستمر"]},
+ {id:"rotator",z:"shoulder",n:"التهاب أوتار الكتف",e:"Rotator cuff tendinopathy",m:["overuse","lift"],s:["ألم لما ترفع دراعك جنب","ألم بالليل على الكتف"],f:["قلّل الحركات فوق الرأس مؤقتاً","تلج 15 دقيقة بعد النشاط"],p:[["تهدئة","تمارين ثبات بدون ألم"],["تقوية","أستك للدوران ولوح الكتف"],["رجوع","رمي تدريجي"]],t:"من 6 لـ 12 أسبوع"},
+ {id:"dislocation",z:"shoulder",n:"خلع الكتف",e:"Shoulder dislocation",m:["fall","impact"],s:["الكتف شكله مختلف","ألم شديد ومش قادر تحرك الدراع"],f:["متحاولش ترجّعه بنفسك","ثبّت الدراع جنب الجسم وروح الطوارئ"],p:[["تثبيت","حمالة لفترة يحددها الطبيب"],["حركة وتقوية","تدريجي"],["رجوع","تمارين ثبات"]],t:"من 3 لـ 4 شهور تقريباً",r:["شكل الكتف متغير","تنميل أو برودة في الدراع"],pop:1,def:1},
+ {id:"acjoint",z:"shoulder",n:"إصابة مفصل الترقوة",e:"AC joint sprain",m:["fall","impact"],s:["ألم فوق الكتف بالظبط","بروز صغير فوق الكتف"],f:["حمالة للراحة أول أيام","تلج 15 دقيقة كل 2-3 ساعات"],p:[["راحة","حمالة وتلج"],["حركة","مدى حركي ثم تقوية"],["رجوع","التحام تدريجي"]],t:"من أسبوعين لـ 12 أسبوع حسب الدرجة"},
+ {id:"rib",z:"chest",n:"كدمة أو كسر ضلع",e:"Rib contusion / fracture",m:["impact","fall"],s:["ألم مع النفس العميق أو الكحة","ألم مركّز عند لمس الضلع"],f:["تلج على المكان","نفس عميق كل ساعة"],p:[["تحكم في الألم","حركة خفيفة"],["لياقة","كارديو بدون التحام"],["رجوع","بعد زوال الألم"]],t:"من 3 لـ 6 أسابيع",r:["ضيق نفس","كحة بدم"]},
+ {id:"pec",z:"chest",n:"شد العضلة الصدرية",e:"Pectoralis strain",m:["lift"],s:["ألم في الصدر قرب الإبط","ألم مع الضغط"],f:["وقف تمارين الدفع","تلج أول 48 ساعة"],p:[["راحة","حركة بدون مقاومة"],["تقوية","دفع خفيف"],["رجوع","أوزان كاملة"]],t:"من أسبوعين لـ 6 أسابيع",r:["طرقعة مع تشوه في شكل الصدر"],pop:1},
+ {id:"trap",z:"upperback",n:"شد عضلات أعلى الظهر",e:"Trapezius / Rhomboid strain",m:["lift","overuse"],s:["ألم بين لوح الكتف والعمود"],f:["حركة خفيفة","كمادات دافية بعد يومين"],p:[["حركة","إطالة خفيفة"],["تقوية","سحب وتجديف"],["رجوع","حمل تدريجي"]],t:"من أسبوع لـ 4 أسابيع"},
+ {id:"tennis",z:"elbow",n:"كوع لاعب التنس",e:"Lateral epicondylalgia",m:["overuse"],s:["ألم في الجزء الخارجي من الكوع","ألم مع المسك"],f:["قلّل المسك القوي"],p:[["تهدئة","ضغط ثابت"],["تحميل","أوزان خفيفة ببطء"],["رجوع","تدريجي"]],t:"من 6 أسابيع لعدة شهور"},
+ {id:"golfer",z:"elbow",n:"كوع لاعب الجولف",e:"Medial epicondylalgia",m:["overuse"],s:["ألم في الجزء الداخلي من الكوع"],f:["قلّل النشاط اللي بيوجع","تلج بعد التمرين"],p:[["تهدئة","تمارين ثابتة"],["تحميل","ثني الرسغ بأوزان"],["رجوع","حركات الرياضة"]],t:"من 6 لـ 12 أسبوع"},
+ {id:"wristsprain",z:"wrist",n:"التواء الرسغ",e:"Wrist sprain",m:["fall","twist"],s:["ورم وألم في الرسغ"],f:["تلج ورفع","رباط ضاغط خفيف"],p:[["حماية","جبيرة خفيفة"],["حركة","مدى حركي"],["تقوية","قبضة"]],t:"من أسبوعين لـ 6 أسابيع"},
+ {id:"scaphoid",z:"wrist",n:"كسر العظمة الزورقية",e:"Scaphoid fracture",m:["fall"],s:["ألم عند قاعدة الصباع الكبير","ألم مع القبضة"],f:["ثبّت الرسغ","اعمل أشعة حتى لو الألم بسيط"],p:[["تثبيت","جبس"],["حركة","مدى حركي"],["تقوية","تحميل تدريجي"]],t:"من 3 لـ 6 شهور",r:["ألم عند قاعدة الإبهام بعد وقعة على اليد"]},
+ {id:"jammed",z:"hand",n:"التواء صباع",e:"Jammed / Mallet finger",m:["impact"],s:["ورم في مفصل الصباع","الطرف مش بيتفرد"],f:["تلج","اربطه مع الصباع اللي جنبه"],p:[["حماية","ربط أو جبيرة"],["حركة","ثني وفرد"],["رجوع","باللصق"]],t:"من أسبوع لـ 8 أسابيع",r:["الصباع مش بيتفرد خالص"]},
+ {id:"boxer",z:"hand",n:"كسر مشط اليد",e:"Metacarpal fracture",m:["impact"],s:["ألم وورم على ظهر اليد"],f:["تلج ورفع","أشعة"],p:[["تثبيت","جبيرة"],["حركة","مدى حركي"],["تقوية","قبضة"]],t:"من 4 لـ 8 أسابيع",def:1},
+ {id:"abs",z:"abdomen",n:"شد عضلات البطن",e:"Abdominal strain",m:["twist","sprint","lift"],s:["ألم مع الكحة أو قعدة البطن"],f:["قلّل الحركات اللي بتوجع"],p:[["راحة","حركة خفيفة"],["تقوية","بلانك"],["رجوع","دوران وسرعة"]],t:"من أسبوعين لـ 6 أسابيع",r:["ألم شديد مع حرارة أو ترجيع"]},
+ {id:"adductor",z:"groin",n:"شد العضلة الضامة",e:"Adductor strain",m:["sprint","twist"],s:["ألم في الفخذ من جوه","ألم مع التسديد"],f:["وقف التسديد","تلج"],p:[["حماية","ضغط ثابت بين الرجلين"],["تقوية","Copenhagen"],["رجوع","جري وتغيير اتجاه"]],t:"من أسبوعين لـ 8 أسابيع"},
+ {id:"hipflexor",z:"groin",n:"شد عضلة ثني الفخذ",e:"Hip flexor strain",m:["sprint"],s:["ألم في مقدمة الحوض"],f:["راحة نسبية","تلج"],p:[["حماية","حركة بدون ألم"],["تقوية","رفع الرجل"],["رجوع","جري"]],t:"من أسبوع لـ 6 أسابيع"},
+ {id:"glutetend",z:"glute",n:"التهاب أوتار الأرداف",e:"Gluteal tendinopathy",m:["overuse"],s:["ألم على جنب الحوض"],f:["مخدة بين الركبتين بالليل"],p:[["تهدئة","تمارين ثابتة"],["تقوية","أرداف"],["رجوع","جري"]],t:"من 8 لـ 12 أسبوع"},
+ {id:"piriformis",z:"glute",n:"متلازمة الكمثرية",e:"Piriformis syndrome",m:["overuse"],s:["ألم عميق في الأرداف"],f:["قلّل القعدة الطويلة"],p:[["تهدئة","إطالة"],["تقوية","ثبات حوض"],["رجوع","تدريجي"]],t:"من 2 لـ 8 أسابيع"},
+ {id:"quadstrain",z:"thigh",n:"شد العضلة الأمامية",e:"Quadriceps strain",m:["sprint","jump"],s:["ألم في مقدمة الفخذ"],f:["تلج ورباط ضاغط"],p:[["حماية","مشي"],["تقوية","سكوات"],["رجوع","تسديد تدريجي"]],t:"من أسبوعين لـ 6 أسابيع"},
+ {id:"cork",z:"thigh",n:"كدمة الفخذ",e:"Quadriceps contusion",m:["impact"],s:["ألم وورم بعد خبطة","صعوبة ثني الركبة"],f:["أول 24 ساعة: اثني الركبة لأقصى درجة مريحة مع تلج","متدلكش المكان"],p:[["حماية","ثني الركبة"],["حركة","مدى كامل"],["رجوع","جري"]],t:"من أسبوع لـ 3 أسابيع",r:["فخذ مشدود جداً","تنميل تحت الركبة"]},
+ {id:"hamstrain",z:"hamstring",n:"شد العضلة الخلفية",e:"Hamstring strain",m:["sprint"],s:["ألم مفاجئ خلف الفخذ وانت بتجري"],f:["وقف الجري فوراً","تلج ورباط ضاغط","متمدّش العضلة بقوة أول أيام"],p:[["حماية","مشي"],["تقوية","Nordic"],["رجوع","سرعة تدريجية"]],t:"من 2 لـ 8 أسابيع",r:["طرقعة عالية مع عجز عن المشي"],pop:1},
+ {id:"acl",z:"knee",n:"قطع الرباط الصليبي",e:"ACL tear",m:["twist","jump"],s:["صوت طرقعة","ورم سريع","الركبة بتهرب"],f:["وقف اللعب","تلج ورفع","طبيب عظام"],p:[["قبل العملية","فرد كامل وتقليل الورم"],["تأهيل","تقوية"],["رجوع","قفز واختبارات"]],t:"من 9 لـ 12 شهر بعد العملية",pop:1,sw:1},
+ {id:"mcl",z:"knee",n:"إصابة الرباط الداخلي",e:"MCL sprain",m:["impact","twist"],s:["ألم في الجانب الداخلي من الركبة"],f:["تلج ورفع","ركبية"],p:[["حماية","ركبية"],["تقوية","فخذ"],["رجوع","تغيير اتجاه"]],t:"من أسبوع لـ 8 أسابيع"},
+ {id:"meniscus",z:"knee",n:"قطع الغضروف الهلالي",e:"Meniscus tear",m:["twist"],s:["ألم على خط المفصل","الركبة بتقفل"],f:["تلج","قلّل اللف والتربيع"],p:[["تهدئة","حركة"],["تقوية","أرجل"],["رجوع","لف"]],t:"من 6 أسابيع لـ 3 شهور",r:["الركبة مقفولة ومش بتتفرد"],sw:1},
+ {id:"patellar",z:"knee",n:"التهاب وتر الرضفة",e:"Patellar tendinopathy",m:["overuse","jump"],s:["ألم تحت صابونة الركبة"],f:["قلّل القفز"],p:[["تهدئة","Wall sit"],["تحميل","سكوات بطيء"],["رجوع","قفز"]],t:"من 6 لـ 12 أسبوع"},
+ {id:"pfps",z:"knee",n:"ألم مقدمة الركبة",e:"Patellofemoral pain",m:["overuse"],s:["ألم حوالين الصابونة","ألم مع السلم"],f:["قلّل المسافة"],p:[["تهدئة","تعديل الحمل"],["تقوية","أرداف وفخذ"],["رجوع","جري"]],t:"من 6 لـ 12 أسبوع"},
+ {id:"itb",z:"knee",n:"متلازمة الشريط الحرقفي",e:"IT band syndrome",m:["overuse"],s:["ألم على جنب الركبة من برا"],f:["قلّل المسافة والنزلات"],p:[["تهدئة","تعديل الجري"],["تقوية","أرداف"],["رجوع","زيادة 10% أسبوعياً"]],t:"من 4 لـ 8 أسابيع"},
+ {id:"shinsplint",z:"shin",n:"آلام قصبة الرجل",e:"Shin splints",m:["overuse","jump"],s:["ألم على الحافة الداخلية للقصبة"],f:["قلّل الجري","أرض أنعم"],p:[["تهدئة","عجلة أو سباحة"],["تقوية","سمانة وقدم"],["رجوع","جري تدريجي"]],t:"من أسبوعين لـ 6 أسابيع"},
+ {id:"tibialsf",z:"shin",n:"كسر إجهادي في القصبة",e:"Tibial stress fracture",m:["overuse"],s:["ألم في نقطة واحدة","ألم بالليل"],f:["وقف الجري","أشعة"],p:[["حماية","تخفيف الحمل"],["تقوية","بدون صدمات"],["رجوع","تدريجي"]],t:"من 6 لـ 12 أسبوع",r:["ألم في نقطة محددة حتى وانت مرتاح"]},
+ {id:"calfstrain",z:"calf",n:"شد السمانة",e:"Calf strain",m:["sprint","jump"],s:["إحساس بخبطة في بطن الرجل","ألم على طراطيف الصوابع"],f:["تلج","كعب صغير مؤقتاً"],p:[["حماية","مشي"],["تقوية","رفع على الأصابع"],["رجوع","جري"]],t:"من أسبوعين لـ 6 أسابيع",pop:1},
+ {id:"lateralankle",z:"ankle",n:"التواء الكاحل",e:"Lateral ankle sprain",m:["twist","jump"],s:["ورم على جنب الكاحل من برا","كدمة"],f:["تلج ورفع","رباط ضاغط","مشي بالقدر اللي تقدر عليه"],p:[["حماية","مشي"],["اتزان","وقوف على رجل"],["رجوع","قفز"]],t:"من أسبوع لـ 6 أسابيع",sw:1},
+ {id:"highankle",z:"ankle",n:"التواء الكاحل العلوي",e:"High ankle sprain",m:["twist","impact"],s:["ألم فوق الكاحل"],f:["تلج","طبيب"],p:[["حماية","مشي محمي"],["تقوية","تدريجي"],["رجوع","تغيير اتجاه"]],t:"من 4 لـ 8 أسابيع"},
+ {id:"achtend",z:"achilles",n:"التهاب وتر أكيلس",e:"Achilles tendinopathy",m:["overuse"],s:["تيبس الصبح في الوتر"],f:["قلّل الجري والطلعات"],p:[["تهدئة","ضغط ثابت"],["تحميل","رفع على الأصابع"],["رجوع","جري"]],t:"من 8 لـ 12 أسبوع"},
+ {id:"achrupture",z:"achilles",n:"قطع وتر أكيلس",e:"Achilles rupture",m:["sprint","jump"],s:["إحساس إن حد ضربك من ورا","مش قادر تقف على طراطيف صوابعك"],f:["متحطش وزن","طوارئ"],p:[["حماية","جبيرة أو عملية"],["تحميل","تدريجي"],["رجوع","جري"]],t:"من 6 لـ 12 شهر",r:["مش قادر تقف على طراطيف صوابعك بعد طرقعة"],pop:1},
+ {id:"plantar",z:"heel",n:"التهاب اللفافة الأخمصية",e:"Plantar fasciitis",m:["overuse"],s:["ألم في الكعب أول خطوة الصبح"],f:["إطالة السمانة","دحرجة كورة تحت القدم"],p:[["تهدئة","إطالة"],["تقوية","قدم"],["رجوع","تدريجي"]],t:"من 6 أسابيع لعدة شهور"},
+ {id:"metsf",z:"foot",n:"كسر إجهادي في المشط",e:"Metatarsal stress fracture",m:["overuse","jump"],s:["ألم في ظهر القدم"],f:["وقف الجري","أشعة"],p:[["حماية","حذاء طبي"],["تقوية","بدون صدمات"],["رجوع","تدريجي"]],t:"من 6 لـ 8 أسابيع",r:["ألم في نقطة واحدة حتى في المشي"]},
+ {id:"turftoe",z:"foot",n:"إصابة الصباع الكبير",e:"Turf toe",m:["impact","jump"],s:["ألم وورم في قاعدة الصباع الكبير"],f:["تلج","حذاء صلب"],p:[["حماية","تثبيت"],["حركة","مدى"],["رجوع","جري"]],t:"من أسبوع لـ 6 أسابيع"},
+ {id:"lumbar",z:"lowback",n:"شد أسفل الظهر",e:"Lumbar strain",m:["lift","twist"],s:["ألم وتشنج في أسفل الظهر"],f:["فضّل متحرك بدل الراحة التامة","كمادات دافية"],p:[["حركة","مشي"],["تقوية","ثبات"],["رجوع","حمل تدريجي"]],t:"من أسبوع لـ 6 أسابيع"},
+ {id:"disc",z:"lowback",n:"انزلاق غضروفي",e:"Disc herniation",m:["lift"],s:["ألم نازل في الرجل","تنميل"],f:["حركة خفيفة","طبيب"],p:[["تهدئة","أوضاع مريحة"],["تقوية","ثبات"],["رجوع","تدريجي"]],t:"من 6 أسابيع لـ 3 شهور",r:["مشاكل في التحكم في البول أو البراز","ضعف بيزيد في الرجل"]},
+];
+const Z=Object.fromEntries(ZONES.map(z=>[z.id,z]));
+const I=Object.fromEntries(INJ.map(i=>[i.id,i]));
+const $=id=>document.getElementById(id);
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
+function esc(s){return s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ===================== 3D HUMAN ===================== */
+const PICK={zone:null,side:null};
+let H=null; // 3D api
+function cssVar(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function init3D(){
+  const T=window.THREE;
+  if(!T||!T.OrbitControls){throw new Error("no three")}
+  const stage=$("stage"),canvas=$("gl");
+  const renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.outputEncoding=T.sRGBEncoding;
+  renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  const scene=new T.Scene();
+  const camera=new T.PerspectiveCamera(30,1,.1,50);
+  camera.position.set(0,1.05,3.9);
+  const controls=new T.OrbitControls(camera,canvas);
+  controls.target.set(0,.9,0);controls.enableDamping=true;controls.dampingFactor=.08;
+  controls.enablePan=false;controls.minDistance=1.5;controls.maxDistance=4.6;
+  controls.minPolarAngle=Math.PI*.3;controls.maxPolarAngle=Math.PI*.62;
+  controls.rotateSpeed=.8;controls.autoRotate=true;controls.autoRotateSpeed=1.1;
+  controls.update();
+
+  scene.add(new T.HemisphereLight(0xffffff,0x8aa4b8,.75));
+  const key=new T.DirectionalLight(0xffffff,.95);key.position.set(1.5,3,2.5);scene.add(key);
+  const fill=new T.DirectionalLight(0xdfeefa,.35);fill.position.set(-2,1.5,1);scene.add(fill);
+  const rim=new T.DirectionalLight(0x6fc3ff,.55);rim.position.set(0,2,-3);scene.add(rim);
+
+  const mat=new T.MeshStandardMaterial({color:new T.Color(cssVar("--model")||"#C3D0DA"),roughness:.55,metalness:.02});
+  const root=new T.Group();scene.add(root);
+  const meshes=[];
+  function add(geo,part,parent,pos,scale,rot){
+    const m=new T.Mesh(geo,mat);m.userData.part=part;
+    if(pos)m.position.set(...pos); if(scale)m.scale.set(...scale); if(rot)m.rotation.set(...rot);
+    (parent||root).add(m);meshes.push(m);return m;
+  }
+  // profile: [[radius,y],...] ascending y
+  function lathe(pts,seg=48){
+    const c=new T.SplineCurve(pts.map(p=>new T.Vector2(p[0],p[1])));
+    const pp=c.getPoints(60).map(v=>new T.Vector2(Math.max(0,v.x),v.y));
+    return new T.LatheGeometry(pp,seg);
+  }
+  const sph=new T.SphereGeometry(1,40,28);
+  // torso
+  add(lathe([[0,.84],[.11,.85],[.158,.9],[.168,.96],[.152,1.04],[.138,1.1],[.148,1.18],[.165,1.27],[.172,1.34],[.16,1.4],[.115,1.445],[.06,1.462],[0,1.465]]),"torso",null,null,[1,1,.62]);
+  add(lathe([[0,1.42],[.05,1.43],[.054,1.5],[.05,1.57],[0,1.58]]),"neck");
+  // head
+  add(sph,"head",null,[0,1.665,0],[.088,.112,.1]);
+  add(sph,"head",null,[0,1.612,.018],[.072,.065,.075]);
+  add(sph,"head",null,[0,1.655,.097],[.014,.022,.016]);
+  for(const s of [-1,1])add(sph,"head",null,[s*.087,1.66,-.002],[.012,.024,.018]);
+  // glutes
+  for(const s of [-1,1])add(sph,"glute",null,[s*.075,.92,-.04],[.085,.09,.07]);
+  // arms
+  const armUp=lathe([[0,-.31],[.036,-.29],[.042,-.22],[.05,-.1],[.054,-.04],[.048,0],[0,.02]]);
+  const armLo=lathe([[0,-.26],[.024,-.25],[.028,-.2],[.04,-.08],[.04,-.03],[.034,0],[0,.01]]);
+  for(const s of [-1,1]){
+    add(sph,"shoulder",null,[s*.19,1.39,0],[.066,.06,.064]);
+    const sh=new T.Group();sh.position.set(s*.2,1.40,0);sh.rotation.z=s*.11;root.add(sh);
+    add(armUp,"upperarm",sh);
+    const el=new T.Group();el.position.y=-.30;el.rotation.z=-s*.03;el.rotation.x=-.12;sh.add(el);
+    add(sph,"upperarm",el,[0,0,0],[.038,.038,.038]);
+    add(armLo,"forearm",el);
+    const wr=new T.Group();wr.position.y=-.255;el.add(wr);
+    add(sph,"hand",wr,[0,-.075,.005],[.022,.08,.045]);
+    add(sph,"hand",wr,[0,-.03,.05],[.016,.035,.016],[.4,0,0]);
+  }
+  // legs
+  const thigh=lathe([[0,-.44],[.05,-.43],[.058,-.38],[.072,-.28],[.084,-.14],[.09,-.04],[.08,.01],[0,.03]]);
+  const shin=lathe([[0,-.42],[.03,-.41],[.033,-.36],[.042,-.26],[.056,-.13],[.054,-.05],[.05,0],[0,.01]]);
+  for(const s of [-1,1]){
+    const hip=new T.Group();hip.position.set(s*.088,.9,0);hip.rotation.z=s*.02;root.add(hip);
+    add(thigh,"thigh",hip);
+    const kn=new T.Group();kn.position.y=-.43;hip.add(kn);
+    add(sph,"knee",kn,[0,0,.006],[.054,.06,.056]);
+    add(shin,"shin",kn);
+    const an=new T.Group();an.position.y=-.41;kn.add(an);
+    add(sph,"ankle",an,[0,0,0],[.034,.034,.034]);
+    add(sph,"foot",an,[0,-.03,.045],[.042,.032,.11]);
+  }
+  // shadow
+  const sc=document.createElement("canvas");sc.width=sc.height=128;const sx=sc.getContext("2d");
+  const gr=sx.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,"rgba(10,30,45,.35)");gr.addColorStop(1,"rgba(10,30,45,0)");sx.fillStyle=gr;sx.fillRect(0,0,128,128);
+  const sh=new T.Mesh(new T.PlaneGeometry(1,1),new T.MeshBasicMaterial({map:new T.CanvasTexture(sc),transparent:true,depthWrite:false}));
+  sh.rotation.x=-Math.PI/2;sh.scale.set(.9,.6,1);sh.position.y=.001;scene.add(sh);
+  // pain marker
+  const mc=document.createElement("canvas");mc.width=mc.height=128;const mx=mc.getContext("2d");
+  const mg=mx.createRadialGradient(64,64,0,64,64,64);mg.addColorStop(0,"rgba(229,72,77,.95)");mg.addColorStop(.35,"rgba(229,72,77,.55)");mg.addColorStop(1,"rgba(229,72,77,0)");mx.fillStyle=mg;mx.fillRect(0,0,128,128);
+  const glow=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(mc),depthTest:false,transparent:true}));glow.visible=false;root.add(glow);
+  const dot=new T.Mesh(new T.SphereGeometry(.014,16,12),new T.MeshBasicMaterial({color:0xE5484D,depthTest:false}));dot.renderOrder=2;dot.visible=false;root.add(dot);
+
+  function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}
+  new ResizeObserver(resize).observe(stage);resize();
+
+  // snap camera
+  let snap=null;
+  function snapTo(name){
+    const az={front:0,right:-Math.PI/2,back:Math.PI,left:Math.PI/2}[name];
+    controls.autoRotate=false;snap=az;
+  }
+  function currentAz(){const v=camera.position.clone().sub(controls.target);return Math.atan2(v.x,v.z)}
+  function setSeg(){
+    const a=currentAz();const n=[["front",0],["right",-Math.PI/2],["back",Math.PI],["left",Math.PI/2]];
+    let best=null,bd=9;for(const [k,v] of n){let d=Math.abs(Math.atan2(Math.sin(a-v),Math.cos(a-v)));if(d<bd){bd=d;best=k}}
+    document.querySelectorAll("[data-cam]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.cam===best&&bd<.5));
+  }
+
+  // picking
+  const ray=new T.Raycaster(),ndc=new T.Vector2();let down=null;
+  canvas.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY,t:Date.now()};controls.autoRotate=false;snap=null});
+  canvas.addEventListener("pointerup",e=>{
+    if(!down)return;const moved=Math.hypot(e.clientX-down.x,e.clientY-down.y);down=null;
+    if(moved>7)return;
+    const r=canvas.getBoundingClientRect();ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+    ray.setFromCamera(ndc,camera);const hit=ray.intersectObjects(meshes,false)[0];
+    if(!hit)return;
+    const p=root.worldToLocal(hit.point.clone());
+    const z=zoneFor(hit.object.userData.part,p);
+    const side=Z[z].bi?(p.x<0?"يمين":"شمال"):null;
+    mark(p);selectZone(z,side,true);
+  });
+  function mark(p){glow.position.copy(p);dot.position.copy(p);glow.visible=dot.visible=true}
+  function markZone(id,side){
+    const pos={head:[0,1.7,.09],neck:[0,1.5,.05],shoulder:[.2,1.4,.04],elbow:[.23,1.1,-.03],wrist:[.25,.86,.02],hand:[.26,.76,.03],chest:[0,1.3,.1],upperback:[.08,1.3,-.1],abdomen:[0,1.05,.09],lowback:[0,1.03,-.09],groin:[.05,.86,.08],glute:[.08,.92,-.1],thigh:[.1,.7,.08],hamstring:[.1,.7,-.08],knee:[.09,.47,.05],shin:[.09,.3,.04],calf:[.09,.32,-.05],ankle:[.12,.06,0],achilles:[.09,.1,-.04],foot:[.09,.02,.14],heel:[.09,.01,-.04]}[id];
+    const sx=side==="يمين"?-1:1;mark(new T.Vector3(pos[0]*sx,pos[1],pos[2]));
+    const back=["upperback","lowback","glute","hamstring","calf","achilles","heel"].includes(id);
+    snapTo(back?"back":"front");
+  }
+  function setColors(){mat.color.set(cssVar("--model")||"#C3D0DA")}
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>setTimeout(setColors,50));
+  new MutationObserver(setColors).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+  const clock=new T.Clock();
+  (function loop(){
+    requestAnimationFrame(loop);
+    const t=clock.getElapsedTime();
+    if(snap!==null){
+      const a=currentAz();const d=Math.atan2(Math.sin(snap-a),Math.cos(snap-a));
+      if(Math.abs(d)<.004)snap=null;else{
+        const v=camera.position.clone().sub(controls.target);const rad=Math.hypot(v.x,v.z);const na=a+d*.12;
+        camera.position.x=controls.target.x+Math.sin(na)*rad;camera.position.z=controls.target.z+Math.cos(na)*rad;
+      }
+    }
+    root.position.y=Math.sin(t*1.6)*.003;root.scale.set(1,1+Math.sin(t*1.6)*.002,1+Math.sin(t*1.6)*.004);
+    if(glow.visible){const k=.09+Math.sin(t*4)*.02;glow.scale.set(k,k,k)}
+    controls.update();setSeg();renderer.render(scene,camera);
+  })();
+  return {snapTo,markZone};
+}
+function zoneFor(part,p){
+  const y=p.y,front=p.z>=0,ax=Math.abs(p.x);
+  switch(part){
+    case "head":return "head";
+    case "neck":return "neck";
+    case "shoulder":return "shoulder";
+    case "upperarm":return y>=1.2?"shoulder":"elbow";
+    case "forearm":return y>=.97?"elbow":"wrist";
+    case "hand":return y>.82?"wrist":"hand";
+    case "glute":return "glute";
+    case "torso":
+      if(y>=1.36&&ax>.11)return "shoulder";
+      if(y>=1.43)return "neck";
+      if(y>=1.14)return front?"chest":"upperback";
+      if(y>=.98)return front?"abdomen":"lowback";
+      return front?"groin":"glute";
+    case "thigh":
+      if(front&&ax<.075&&y>.72)return "groin";
+      if(y<.52)return "knee";
+      return front?"thigh":"hamstring";
+    case "knee":return "knee";
+    case "shin":
+      if(y<.12)return p.z<0?"achilles":"ankle";
+      return front?"shin":"calf";
+    case "ankle":return p.z<-.012?"achilles":"ankle";
+    case "foot":return p.z>.03?"foot":"heel";
+  }
+  return "knee";
+}
+
+/* ===================== CHAT ===================== */
+const msgs=$("msgs"),quick=$("quick"),input=$("input"),sendBtn=$("send");
+let turns=[];            // conversation for Claude (excluding rules)
+let busy=false,ctl=null;
+let samplePromise=null,AI=undefined; // undefined: unknown yet
+function getSample(){
+  if(!samplePromise)samplePromise=(window.claude&&window.claude.use?window.claude.use("sample"):Promise.resolve(null)).then(s=>{AI=s||null;setMode();return AI}).catch(()=>{AI=null;setMode();return null});
+  return samplePromise;
+}
+function setMode(){$("mode").textContent=AI?"مساعد ذكي · بيرد عليك بالكلام":AI===null?"وضع الأسئلة السريعة":"مساعد إسعافات أولية"}
+function fmt(t){
+  const lines=esc(t).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").split(/\n/);
+  let h="",list=null;
+  for(const l of lines){
+    const ol=l.match(/^\s*(\d+)[.)-]\s+(.*)/),ul=l.match(/^\s*[-•*]\s+(.*)/);
+    if(ol||ul){const type=ol?"ol":"ul";if(list!==type){if(list)h+=`</${list}>`;h+=`<${type}>`;list=type}h+=`<li>${ol?ol[2]:ul[1]}</li>`;continue}
+    if(list){h+=`</${list}>`;list=null}
+    if(l.trim())h+=`<p>${l}</p>`;
+  }
+  if(list)h+=`</${list}>`;
+  return h;
+}
+function addMsg(who,text,html){
+  const d=document.createElement("div");d.className="m "+who;
+  if(html)d.innerHTML=html;else if(who==="me")d.textContent=text;else d.innerHTML=fmt(text);
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;
+}
+function setQuick(list,handler){
+  quick.innerHTML="";
+  (list||[]).forEach(t=>{const b=document.createElement("button");b.className="chip";b.textContent=t;b.onclick=()=>handler?handler(t):send(t);quick.appendChild(b)});
+}
+const LVL={red:["طوارئ","red"],amber:["محتاج كشف","amber"],green:["إسعاف في البيت","green"],unknown:["لسه بنقيّم",""]};
+function setLevel(l){const v=LVL[l]||LVL.unknown;const e=$("lvl");e.textContent=v[0];e.className="lvl "+v[1]}
+function parseTags(text){
+  const lv=text.match(/\[\[LEVEL:\s*(red|amber|green|unknown)\s*\]\]/i);
+  const ch=text.match(/\[\[CHIPS:([^\]]*)\]\]/i);
+  const clean=text.replace(/\[\[[\s\S]*$/,"").trim();
+  return{clean,level:lv&&lv[1].toLowerCase(),chips:ch?ch[1].split("|").map(s=>s.trim()).filter(Boolean).slice(0,4):[]};
+}
+function rules(){
+  const z=PICK.zone?Z[PICK.zone]:null;
+  const ref=z?INJ.filter(i=>i.z===z.id).map(i=>`- ${i.n} (${i.e}): أعراض: ${i.s.join("، ")}${i.r?" | علامات خطر: "+i.r.join("، "):""}`).join("\n"):"";
+  return `أنت "REHABIFY"، مساعد إسعافات أولية للإصابات الرياضية. اتكلم بالعامية المصرية بلطف وهدوء ووضوح، زي مسعف خبير بيطمّن الشخص وبيوجهه.
+${z?`المستخدم حدد مكان الألم على مجسم الجسم: ${z.n}${PICK.side?" ("+PICK.side+")":""}.`:"المستخدم لسه محددش مكان الألم على المجسم."}
+${ref?"إصابات شائعة في المكان ده للاستئناس (مش لازم تكون واحدة منهم):\n"+ref:""}
+
+طريقة الجلسة:
+1. رسايل قصيرة (من 2 لـ 6 سطور). سؤال واحد بس في كل رسالة.
+2. أول حاجة اتأكد من علامات الخطر المناسبة للمكان: فقدان وعي، صعوبة تنفس، نزيف شديد، تشوه أو عظمة بارزة، تنميل أو ضعف أو برودة، مش قادر يتحرك أو يشيل وزنه، خبطة قوية في الرأس أو الرقبة أو الظهر، ألم صدر.
+3. لو فيه أي علامة خطر: قوله يتصل بالإسعاف 123 فوراً (أو يخلي حد يتصل)، وإديله خطوات مرقمة واضحة يعملها لحد ما الإسعاف يوصل، وكمّل معاه خطوة خطوة.
+4. لو مفيش خطر: اسأل إزاي حصلت ومن إمتى والأعراض (ورم، طرقعة، قدرته على الحركة، درجة الألم من 10)، وبعدها قوله الاحتمالات الأقرب بصيغة "غالباً" أو "ممكن" مش تشخيص أكيد، وخطة أول 48–72 ساعة (حماية، رفع، ضغط خفيف، تلج 15 دقيقة لو مريح، حركة تدريجية)، وإمتى لازم يكشف.
+5. متديش جرعات أدوية بالأرقام. متخترعش معلومات. لو مش متأكد قول كده ووجّهه لطبيب.
+6. لو الكلام برا الإصابات والإسعافات، رجّعه بلطف للموضوع.
+
+في آخر كل رد اكتب سطرين بالظبط بالشكل ده:
+[[LEVEL:red]] أو [[LEVEL:amber]] أو [[LEVEL:green]] أو [[LEVEL:unknown]] (red = محتاج إسعاف أو طوارئ دلوقتي، amber = كشف خلال يوم أو اتنين، green = إسعاف في البيت، unknown = لسه بتقيّم)
+[[CHIPS:رد قصير 1|رد قصير 2|رد قصير 3]] (ردود مقترحة يضغط عليها المستخدم كإجابة على سؤالك، كل واحد من 1 لـ 5 كلمات)`;
+}
+async function send(text){
+  text=(text||"").trim();if(!text||busy)return;
+  addMsg("me",text);input.value="";autosize();setQuick([]);
+  const s=await getSample();
+  if(!s){offlineAnswer(text);return}
+  turns.push({role:"user",content:text});
+  if(turns.length>24)turns=turns.slice(-24);
+  while(turns.length&&turns[0].role!=="user")turns.shift();
+  busy=true;sendBtn.disabled=true;
+  const bubble=addMsg("bot","",`<span class="typing"><i></i><i></i><i></i></span>`);
+  ctl=new AbortController();
+  try{
+    const {text:full,truncated}=await s([{role:"user",content:rules()},...turns],{cache:false,signal:ctl.signal,modelTier:"default",effort:"low",
+      onText:({text})=>{const c=parseTags(text).clean;if(c){bubble.innerHTML=fmt(c);msgs.scrollTop=msgs.scrollHeight}}});
+    const r=parseTags(full);bubble.innerHTML=fmt(r.clean||"…");
+    if(r.level)setLevel(r.level);setQuick(r.chips);
+    turns.push({role:"assistant",content:full});
+    if(truncated)addMsg("sys","الرد اتقطع، اسألني تاني باختصار.");
+  }catch(e){
+    if(e&&e.text){bubble.innerHTML=fmt(parseTags(e.text).clean)}else bubble.remove();
+    turns.pop();
+    if(e&&(e.code==="not_granted"||e.code==="sampling_disabled"||e.code==="not_declared"||e.code==="capability_disabled")){
+      AI=null;setMode();addMsg("sys","المساعد الذكي مش متاح هنا، هكمّل معاك بالأسئلة السريعة.");offlineAnswer(text);
+    }else if(e&&e.code==="rate_limited"){addMsg("sys","فيه ضغط دلوقتي، استنى شوية وابعت تاني. لو حالة طارئة اتصل 123.")}
+    else if(e&&e.code!=="cancelled"){addMsg("sys","حصلت مشكلة في الاتصال. ابعت رسالتك تاني.")}
+  }finally{busy=false;sendBtn.disabled=false}
+}
+$("compose").addEventListener("submit",e=>{e.preventDefault();send(input.value)});
+input.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(input.value)}});
+function autosize(){input.style.height="auto";input.style.height=Math.min(input.scrollHeight,120)+"px"}
+input.addEventListener("input",autosize);
+
+const EMERGENCY=`**اتصل بالإسعاف 123 دلوقتي، أو خلّي حد جنبك يتصل.**
+لحد ما يوصلوا:
+1. أمّن المكان ومتعرضش نفسك للخطر.
+2. كلّم المصاب: لو مش بيرد ومش بيتنفس طبيعي ابدأ ضغطات صدر في نص الصدر (100–120 ضغطة في الدقيقة) والإسعاف هيوجهك في التليفون.
+3. لو الخبطة في الرأس أو الرقبة أو الظهر: متحركوش إلا لو المكان خطر.
+4. لو فيه نزيف: اضغط عليه بقماشة نضيفة جامد ومتشيلهاش.
+5. لو طرف شكله متغير: ثبّته زي ما هو ومتحاولش ترجّعه.
+6. غطيه عشان ميبردش، ومتديلوش أكل أو شرب.
+قولي إيه اللي حصل بالظبط وأنا معاك خطوة بخطوة.`;
+$("sosBtn").onclick=()=>{
+  addMsg("me","حالة طارئة دلوقتي");addMsg("bot",EMERGENCY);setLevel("red");
+  turns.push({role:"user",content:"حالة طارئة دلوقتي"},{role:"assistant",content:EMERGENCY+"\n[[LEVEL:red]]"});
+  setQuick(["مش بيرد","بيتنفس بس بيتألم","فيه نزيف","خبطة في الرأس"]);
+};
+
+/* ----- offline guided flow (when AI unavailable) ----- */
+const QS=[
+ {k:"head",t:"فيه فقدان وعي أو ترجيع أو لخبطة؟",o:[["no","لأ"],["yes","أيوه"]],only:["head","neck"]},
+ {k:"deform",t:"شكل المكان متغير أو فيه عظمة بارزة؟",o:[["no","لأ"],["yes","أيوه"]]},
+ {k:"numb",t:"فيه تنميل أو ضعف أو برودة؟",o:[["no","لأ"],["yes","أيوه"]]},
+ {k:"use",t:"تقدر تشيل وزنك أو تحرك المكان؟",o:[["yes","عادي"],["hurt","بألم"],["no","مش قادر خالص"]]},
+ {k:"pop",t:"سمعت أو حسيت بطرقعة لحظة الإصابة؟",o:[["no","لأ"],["yes","أيوه"]]},
+ {k:"swell",t:"فيه ورم؟",o:[["no","لأ"],["slow","ظهر بعد يوم"],["fast","ظهر بسرعة"]]},
+ {k:"pain",t:"الألم من 10 قد إيه؟",o:[["3","خفيف (1–3)"],["5","متوسط (4–6)"],["8","شديد (7–10)"]]},
+];
+let OFF={step:-1,ans:{},mech:null};
+function offlineStart(){
+  OFF={step:-1,ans:{},mech:null};
+  if(!PICK.zone){addMsg("bot","اضغط على مكان الألم في المجسم أو اختاره من القايمة تحت المجسم، وأنا هسألك كام سؤال سريع.");return}
+  const mechs=[...new Set(INJ.filter(i=>i.z===PICK.zone).flatMap(i=>i.m))];
+  addMsg("bot","الإصابة حصلت إزاي؟");
+  setQuick(mechs.map(m=>MECH[m]).concat("مش متأكد"),t=>{addMsg("me",t);OFF.mech=Object.keys(MECH).find(k=>MECH[k]===t)||"unknown";OFF.step=0;offlineNext()});
+}
+function offlineNext(){
+  const qs=QS.filter(q=>!q.only||q.only.includes(PICK.zone));
+  if(OFF.step>=qs.length){offlineResult();return}
+  const q=qs[OFF.step];addMsg("bot",q.t);
+  setQuick(q.o.map(o=>o[1]),t=>{addMsg("me",t);OFF.ans[q.k]=q.o.find(o=>o[1]===t)[0];OFF.step++;
+    const a=OFF.ans;
+    if(a.head==="yes"||a.deform==="yes"||a.numb==="yes"||a.use==="no"){offlineResult();return}
+    offlineNext()});
+}
+function offlineResult(){
+  const a=OFF.ans,pain=+(a.pain||5);let lvl="green",msg="";
+  if(a.head==="yes"||a.deform==="yes"||a.numb==="yes"||a.use==="no"){lvl="red";msg=EMERGENCY}
+  else{
+    const why=[];if(a.pop==="yes")why.push("الطرقعة");if(a.swell==="fast")why.push("الورم السريع");if(pain>=7)why.push("الألم الشديد");
+    if(why.length)lvl="amber";
+    const ranked=INJ.filter(i=>i.z===PICK.zone).map(i=>{let s=1;if(OFF.mech&&OFF.mech!=="unknown")s+=i.m.includes(OFF.mech)?3:-1;if(a.pop==="yes")s+=i.pop?2:-.5;if(a.swell==="fast"&&i.sw)s+=2;if(i.def)s-=1.5;return{i,s}}).sort((x,y)=>y.s-x.s).slice(0,2);
+    msg=(lvl==="amber"?`**محتاج تكشف خلال 24 لـ 48 ساعة** بسبب ${why.join(" و")}.`:"**غالباً تقدر تبدأ إسعافات في البيت.** لو الألم مقلش خلال 3–5 أيام اكشف.")+
+      `\nالاحتمالات الأقرب: ${ranked.map(r=>r.i.n).join("، أو ")}.\nدلوقتي:\n`+(ranked[0]?ranked[0].i.f:[]).map(x=>"- "+x).join("\n")+
+      "\n- ارفع المكان وحط رباط ضاغط خفيف\n- رجّع الحركة تدريجياً في حدود الألم";
+  }
+  addMsg("bot",msg);setLevel(lvl);
+  const top=INJ.filter(i=>i.z===PICK.zone)[0];
+  setQuick(["ابدأ من الأول","تفاصيل التأهيل"],t=>{if(t==="ابدأ من الأول")offlineStart();else openInj(top.id)});
+}
+function offlineAnswer(text){
+  addMsg("bot","في الوضع ده بمشي معاك بأسئلة محددة. لو حد في خطر دلوقتي اتصل بالإسعاف 123.");
+  if(OFF.step<0)offlineStart();
+}
+
+/* ----- zone selection ----- */
+function selectZone(id,side,fromBody){
+  const changed=PICK.zone&&(PICK.zone!==id||PICK.side!==side);
+  PICK.zone=id;PICK.side=side;
+  const label=Z[id].n+(side?" — "+side:"");
+  const p=$("picked");p.hidden=false;p.textContent=label;p.style.animation="none";void p.offsetWidth;p.style.animation="";
+  document.querySelectorAll("#zonebar .chip").forEach(c=>c.setAttribute("aria-pressed",c.dataset.z===id));
+  if(!fromBody&&H)H.markZone(id,side);
+  if(changed&&turns.length){addMsg("sys","المكان اتغيّر، بنبدأ تقييم جديد");turns=[];setLevel("unknown")}
+  startConsult();
+}
+async function startConsult(){
+  const z=Z[PICK.zone],where=z.n+(PICK.side?" "+PICK.side:"");
+  const s=await getSample();
+  if(!s){addMsg("bot",`تمام، الألم في **${where}**.`);offlineStart();return}
+  if(busy)return;
+  const greet=`تمام، الألم في **${where}**. قبل أي حاجة: فيه نزيف شديد، أو شكل المكان متغير، أو تنميل، أو مش قادر تحركه خالص؟ ولو مفيش، احكيلي حصل إزاي.`;
+  addMsg("bot",greet);
+  turns=[{role:"user",content:`حددت مكان الألم: ${where}`},{role:"assistant",content:greet}];
+  setQuick(["لأ، مفيش حاجة من دول","مش قادر أحركه","شكله متغير","اتلويت وأنا بلعب"]);
+}
+// zone chips
+$("zonebar").innerHTML=ZONES.map(z=>`<button class="chip" data-z="${z.id}" aria-pressed="false">${z.n}</button>`).join("");
+$("zonebar").querySelectorAll(".chip").forEach(b=>b.onclick=()=>selectZone(b.dataset.z,Z[b.dataset.z].bi?"يمين":null,false));
+document.querySelectorAll("[data-cam]").forEach(b=>b.onclick=()=>H&&H.snapTo(b.dataset.cam));
+
+/* ===================== LIBRARY ===================== */
+const dlg=$("dlg");
+function openInj(id){
+  const i=I[id],z=Z[i.z];
+  $("dT").textContent=i.n;$("dE").textContent=i.e+" · "+z.n;
+  $("dB").innerHTML=`<div><h3>الأعراض</h3><ul>${i.s.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+   <div><h3>الإسعاف الأول</h3><ul>${i.f.map(x=>`<li>${x}</li>`).join("")}</ul></div>
+   <div><h3>مراحل التأهيل</h3>${i.p.map((p,k)=>`<div class="ph"><span class="n">${k+1}</span><p><b>${p[0]}</b>: ${p[1]}</p></div>`).join("")}</div>
+   <div class="rtp">الرجوع للتمرين: ${i.t}</div>
+   ${i.r?`<div class="flags"><h3>اكشف فوراً لو</h3><ul>${i.r.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}`;
+  dlg.showModal();
+}
+$("dX").onclick=()=>dlg.close();dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+let region="الكل";
+function renderLib(){
+  const q=$("q").value.trim().toLowerCase();
+  const regs=["الكل",...new Set(ZONES.map(z=>z.reg))];
+  $("regionChips").innerHTML=regs.map(r=>`<button class="chip" data-r="${r}" aria-pressed="${r===region}">${r}</button>`).join("");
+  document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{region=b.dataset.r;renderLib()});
+  const list=INJ.filter(i=>{const z=Z[i.z];if(region!=="الكل"&&z.reg!==region)return false;return !q||(i.n+i.e+z.n+i.s.join(" ")).toLowerCase().includes(q)});
+  $("cards").innerHTML=list.length?list.map(i=>`<button class="card" data-i="${i.id}"><span class="pill">${Z[i.z].n}</span><h3>${i.n}</h3><div class="en">${i.e}</div><p>${i.s.slice(0,2).join("، ")}</p><p><b>الرجوع:</b> ${i.t}</p></button>`).join(""):`<div class="empty">مفيش نتايج. جرّب كلمة تانية زي "ركبة" أو "شد".</div>`;
+  document.querySelectorAll("#cards [data-i]").forEach(b=>b.onclick=()=>openInj(b.dataset.i));
+}
+$("q").oninput=renderLib;
+
+/* ===================== TRACKER ===================== */
+const KEY="rehabify-log";
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return[]}}
+function save(l){try{localStorage.setItem(KEY,JSON.stringify(l))}catch(e){}}
+function painColor(v){return v>=7?"var(--hot)":v>=4?"var(--amber)":"var(--ok)"}
+let LOG=load();
+const tInj=$("tInj"),tPain=$("tPain"),tPainV=$("tPainV"),tDate=$("tDate");
+tInj.innerHTML=INJ.map(i=>`<option value="${i.id}">${i.n} — ${Z[i.z].n}</option>`).join("");
+tDate.value=new Date().toISOString().slice(0,10);
+tPain.oninput=()=>{tPainV.textContent=tPain.value;tPainV.style.color=painColor(+tPain.value)};
+$("tform").addEventListener("submit",e=>{e.preventDefault();
+  LOG.push({id:Date.now(),inj:tInj.value,date:tDate.value,pain:+tPain.value,note:$("tNote").value.trim()});
+  LOG.sort((a,b)=>a.date.localeCompare(b.date));save(LOG);$("tNote").value="";renderTracker();toast("اتسجّل")});
+function renderTracker(){
+  const inj=tInj.value,rows=LOG.filter(r=>r.inj===inj);
+  $("chartTitle").textContent="منحنى الألم — "+I[inj].n;
+  const ch=$("chart");
+  if(!rows.length)ch.innerHTML=`<div class="empty">لسه مفيش تسجيلات للإصابة دي. سجّل درجة الألم النهارده وهيظهر المنحنى هنا.</div>`;
+  else{
+    const W=560,Hh=200,pl=34,pr=14,pt=12,pb=28,n=rows.length;
+    const x=k=>n===1?(pl+W-pr)/2:pl+k*(W-pl-pr)/(n-1),y=v=>pt+(10-v)*(Hh-pt-pb)/10;
+    let s=`<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="منحنى الألم">`;
+    for(const v of [0,5,10])s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${pl-8}" y="${y(v)+4}" font-size="11" fill="var(--muted)" text-anchor="end">${v}</text>`;
+    const pts=rows.map((r,k)=>`${x(k)},${y(r.pain)}`).join(" ");
+    if(n>1)s+=`<polygon points="${x(0)},${y(0)} ${pts} ${x(n-1)},${y(0)}" fill="var(--tape)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--tape)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    rows.forEach((r,k)=>{s+=`<circle cx="${x(k)}" cy="${y(r.pain)}" r="${k===n-1?6:4}" fill="${k===n-1?painColor(r.pain):"var(--surface)"}" stroke="var(--tape)" stroke-width="2"/>`});
+    [...new Set([0,n-1])].forEach(k=>{s+=`<text x="${x(k)}" y="${Hh-8}" font-size="11" fill="var(--muted)" text-anchor="${n===1?"middle":k===0?"start":"end"}">${rows[k].date.slice(5)}</text>`});
+    ch.innerHTML=s+"</svg>";
+  }
+  $("log").innerHTML=rows.slice().reverse().map(r=>`<div class="entry"><span class="pain" style="color:${painColor(r.pain)}">${r.pain}</span><div><b>${r.date}</b><small>${esc(r.note||"بدون ملاحظة")}</small></div><button class="del" data-d="${r.id}">مسح</button></div>`).join("");
+  document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{LOG=LOG.filter(r=>r.id!=+b.dataset.d);save(LOG);renderTracker()});
+}
+tInj.onchange=renderTracker;
+
+/* ===================== ROUTER & BOOT ===================== */
+function route(){
+  const h=(location.hash||"#assistant").slice(1);const v=["assistant","library","tracker"].includes(h)?h:"assistant";
+  for(const id of ["assistant","library","tracker"])$("v-"+id).hidden=id!==v;
+  document.querySelectorAll("nav a").forEach(a=>{if(a.getAttribute("href")==="#"+v)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(v==="library")renderLib();if(v==="tracker")renderTracker();
+}
+window.addEventListener("hashchange",route);route();
+try{H=init3D()}catch(e){$("stage").innerHTML=`<div class="glfail"><div><b>المجسم ثلاثي الأبعاد مش شغال على الجهاز ده.</b><br>اختار مكان الألم من القايمة تحت.</div></div>`}
+addMsg("bot","أهلاً، أنا مساعد REHABIFY للإصابات الرياضية.\n**اضغط على مكان الألم في الجسم** (تقدر تلفه وتشوفه من كل الجهات)، أو احكيلي على طول إيه اللي حصل.\nلو حد في خطر دلوقتي اضغط **حالة طارئة دلوقتي**.");
+setQuick(["اتلويت في رجلي","وقعت على إيدي","خبطة في راسي","وجع بقاله أيام"]);
+getSample();
+</script>
+
+</body>
+</html>
